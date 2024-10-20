@@ -59,3 +59,8 @@ func (r *RedisClientImpl) ZPopMinBatch(key string, count int64) ([]redis.Z, erro
 	}
 	return result, nil
 }
+
+// Close closes the Redis client connection
+func (r *RedisClientImpl) Close() error {
+	return r.client.Close()
+}

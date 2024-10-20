@@ -40,16 +40,22 @@ services:
       REDIS_HOST: redis
       REDIS_PORT: 6379
     ports:
-      - "8080:8080" 
-      - "9090:9090"  
+      - "8080:8080"
+      - "9090:9090"
     command: ["./stop-loss-trading"]
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 
   prometheus:
     image: prom/prometheus:latest
     volumes:
       - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
     ports:
-      - "9091:9090"  
+      - "9091:9090"
     depends_on:
       stop-loss-trading:
         condition: service_healthy

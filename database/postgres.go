@@ -45,3 +45,8 @@ func (p *PostgresDB) CreateStopLossCriteria(criteria models.StopLossCriteria) er
 	_, err := p.DB.Exec(query, criteria.OrderID, criteria.StopLossPrice, criteria.ExpiryDate)
 	return err
 }
+
+// Close closes the PostgreSQL database connection
+func (p *PostgresDB) Close() error {
+	return p.DB.Close()
+}

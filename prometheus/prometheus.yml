@@ -1,0 +1,7 @@
+global:
+  scrape_interval: 15s  # How often to scrape targets by default
+
+scrape_configs:
+  - job_name: 'stop-loss-trading'
+    static_configs:
+      - targets: ['stop-loss-trading:9090']  # Replace with your actual service name and port
