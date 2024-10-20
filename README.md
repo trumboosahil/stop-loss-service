@@ -19,7 +19,7 @@ This project is a stop-loss trading system that processes financial tick events 
 1. **Clone the Repository**
 
    ```bash
-   git clone https://github.com/yourusername/stop-loss-trading.git
+   git clone git@github.com:trumboosahil/stop-loss-service.git
    cd stop-loss-trading
    ```
 2. **Build and Run with Docker Compose**
