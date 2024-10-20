@@ -34,7 +34,7 @@ This project is a stop-loss trading system that processes financial tick events 
 
 ## Configuration
 
-- **Environment Variables**: Configure your environment variables in the `docker-compose.yml` file or use a `.env` file for sensitive information.
+- **Environment Variables**: Configure your environment variables in the `docker compose.yml` file or use a `.env` file for sensitive information.
 
 ## Usage
 
@@ -47,6 +47,9 @@ This project is a stop-loss trading system that processes financial tick events 
 - **Redis**: Used for storing and managing order data.
 - **PostgreSQL**: Stores order history and execution logs.
 - **Prometheus**: Monitors system performance and metrics.
+
+
+![1729450115964](image/README/1729450115964.png)
 
 ## Contributing
 
