@@ -6,66 +6,34 @@ import (
 	"strconv"
 	"time"
 
+	"stop-loss-trading/metrics"
 	"stop-loss-trading/models"
 	"stop-loss-trading/redispkg"
-
-	"github.com/prometheus/client_golang/prometheus"
 )
 
 type WorkerService struct {
-	redis               redispkg.RedisClient
-	batchSize           int64
-	workerID            string
-	tickEventsProcessed prometheus.Counter
-	ordersChecked       *prometheus.GaugeVec
-	stopLossExecuted    *prometheus.GaugeVec
+	redis     redispkg.RedisClient
+	batchSize int64
+	workerID  string
 }
 
 func NewWorkerService(redis redispkg.RedisClient, workerID string) *WorkerService {
-	tickEventsProcessed := prometheus.NewCounter(prometheus.CounterOpts{
-		Name: "tick_events_processed_total",
-		Help: "Total number of tick events processed.",
-	})
-	ordersChecked := prometheus.NewGaugeVec(
-		prometheus.GaugeOpts{
-			Name: "orders_checked_per_tick",
-			Help: "Number of orders checked per tick.",
-		},
-		[]string{"worker_id", "tick_id"},
-	)
-
-	// Create a new GaugeVec for orders checked
-	stopLossExecuted := prometheus.NewGaugeVec(
-		prometheus.GaugeOpts{
-			Name: "stop_loss_executed_total",
-			Help: "Total number of stop-loss orders executed.",
-		},
-		[]string{"worker_id", "tick_id"},
-	)
-	// Register the Prometheus metric
-	prometheus.MustRegister(tickEventsProcessed, ordersChecked, stopLossExecuted)
-
 	return &WorkerService{
-		redis:               redis,
-		batchSize:           40,
-		workerID:            workerID,
-		tickEventsProcessed: tickEventsProcessed,
-		ordersChecked:       ordersChecked,
-		stopLossExecuted:    stopLossExecuted,
+		redis:     redis,
+		batchSize: 100,
+		workerID:  workerID,
 	}
 }
 
 func (w *WorkerService) Start() {
-	// Start the HTTP server for Prometheus metrics
-
 	w.processTickEvents()
 }
 
-// processTickEvents listens for tick events and processes orders based on them
 func (w *WorkerService) processTickEvents() {
 	tickChannel := w.redis.Subscribe("tick_events")
 
 	for tick := range tickChannel {
+
 		var tickEvent models.TickEvent
 
 		err := json.Unmarshal([]byte(tick), &tickEvent)
@@ -73,18 +41,21 @@ func (w *WorkerService) processTickEvents() {
 			log.Printf("Failed to parse tick event JSON: %v\n", err)
 			continue
 		}
+
 		// Increment the tick events counter
-		w.tickEventsProcessed.Inc()
+		metrics.TickEventsProcessed.Inc()
+
 		// Reset per-tick counters
 		ordersCheckedForTick := 0
 		stopLossExecutedForTick := 0
 
 		// Process orders based on the latest tick value and symbol
 		w.evaluateStopLosses(tickEvent.Price, tickEvent.Symbol, &ordersCheckedForTick, &stopLossExecutedForTick)
+
 		// Set the per-tick metrics in Prometheus
 		tickIDStr := strconv.FormatInt(tickEvent.Timestamp, 10) // or any unique identifier for the tick
-		w.ordersChecked.WithLabelValues(tickIDStr).Set(float64(ordersCheckedForTick))
-		w.stopLossExecuted.WithLabelValues(tickIDStr).Set(float64(stopLossExecutedForTick))
+		metrics.OrdersChecked.WithLabelValues(w.workerID, tickIDStr).Set(float64(ordersCheckedForTick))
+		metrics.StopLossExecuted.WithLabelValues(w.workerID, tickIDStr).Set(float64(stopLossExecutedForTick))
 	}
 }
 
@@ -130,11 +101,12 @@ func (w *WorkerService) evaluateStopLosses(currentTickValue float64, symbol stri
 
 // shouldExecuteStopLoss determines if the stop-loss conditions are met
 func (w *WorkerService) shouldExecuteStopLoss(stopLossPrice, tickPrice float64, expiry int64) bool {
-	return tickPrice <= stopLossPrice && time.Now().Unix() < expiry
+	return tickPrice <= stopLossPrice || time.Now().Unix() < expiry
 }
 
 // executeOrder handles the execution of the order and updates the status in the database
 func (w *WorkerService) executeOrder(orderID int) {
 	log.Printf("Executing order ID: %d\n", orderID)
+	// TODO: Implement order execution logic probably in a different service using a pubsub pattern
 	// Logic to mark the order as executed in the database
 }

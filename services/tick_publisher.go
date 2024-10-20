@@ -55,5 +55,5 @@ func (p *TickPublisher) StartTickPublishing() {
 
 // generateRandomPrice generates a random price for simulation purposes
 func (p *TickPublisher) generateRandomPrice() float64 {
-	return rand.Float64()*100 + 50 // Generate a random price between 50 and 150
+	return rand.Float64()*100 + 50
 }

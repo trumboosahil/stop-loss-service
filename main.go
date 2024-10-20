@@ -8,6 +8,7 @@ import (
 	"os/signal"
 	"stop-loss-trading/database"
 	"stop-loss-trading/handlers"
+	"stop-loss-trading/metrics" // Import the metrics package
 	"stop-loss-trading/redispkg"
 	"stop-loss-trading/services"
 	"sync"
@@ -25,6 +26,9 @@ func main() {
 	dbName := os.Getenv("DB_NAME")
 	redisHost := os.Getenv("REDIS_HOST")
 	redisPort := os.Getenv("REDIS_PORT")
+
+	// Register Prometheus metrics globally once
+	metrics.RegisterMetrics()
 
 	// Connect to PostgreSQL
 	db, err := database.NewPostgresDB(dbHost, dbPort, dbUser, dbPassword, dbName)
@@ -70,7 +74,7 @@ func main() {
 	go tickPublisher.StartTickPublishing()
 
 	// Start Worker Services
-	numWorkers := 5
+	numWorkers := 20
 	var wg sync.WaitGroup
 
 	for i := 1; i <= numWorkers; i++ {
