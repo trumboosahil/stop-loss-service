@@ -28,6 +28,6 @@ var (
 )
 
 func RegisterMetrics() {
-	// Register all metrics globally once
+
 	prometheus.MustRegister(TickEventsProcessed, OrdersChecked, StopLossExecuted)
 }

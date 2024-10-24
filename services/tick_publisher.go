@@ -23,10 +23,8 @@ func NewTickPublisher(redis redispkg.RedisClient) *TickPublisher {
 	return &TickPublisher{redis: redis}
 }
 
-// Predefined static symbols for tick events
 var staticSymbols = []string{"AAPL", "GOOG", "TSLA", "AMZN", "MSFT"}
 
-// StartTickPublishing publishes tick events every second for static symbols
 func (p *TickPublisher) StartTickPublishing() {
 	ticker := time.NewTicker(1 * time.Second)
 	defer ticker.Stop()
@@ -41,7 +39,6 @@ func (p *TickPublisher) StartTickPublishing() {
 				Timestamp: time.Now().Unix(),
 			}
 
-			// Convert the TickEvent to JSON
 			tickPayload, err := json.Marshal(tickEvent)
 			if err != nil {
 				fmt.Printf("Failed to marshal tick event: %v\n", err)
@@ -53,7 +50,6 @@ func (p *TickPublisher) StartTickPublishing() {
 	}
 }
 
-// generateRandomPrice generates a random price for simulation purposes
 func (p *TickPublisher) generateRandomPrice() float64 {
 	return rand.Float64()*100 + 50
 }
