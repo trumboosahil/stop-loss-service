@@ -64,7 +64,7 @@ func main() {
 	tickPublisher := services.NewTickPublisher(redisClient)
 	go tickPublisher.StartTickPublishing()
 
-	numWorkers := 20
+	numWorkers := 200
 	var wg sync.WaitGroup
 
 	for i := 1; i <= numWorkers; i++ {

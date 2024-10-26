@@ -47,7 +47,24 @@ func (w *WorkerService) processTickEvents() {
 		ordersCheckedForTick := 0
 		stopLossExecutedForTick := 0
 
-		w.evaluateStopLosses(tickEvent.Price, tickEvent.Symbol, &ordersCheckedForTick, &stopLossExecutedForTick)
+		// Process contracts in a loop until a new tick arrives
+	processLoop:
+		for {
+			select {
+			case newTick := <-tickChannel:
+				// New tick arrived, parse it and break the loop to process the new tick
+				err := json.Unmarshal([]byte(newTick), &tickEvent)
+				if err != nil {
+					log.Printf("Failed to parse new tick event JSON: %v\n", err)
+					continue
+				}
+				break processLoop
+
+			default:
+				// No new tick, continue processing contracts
+				w.evaluateStopLosses(tickEvent.Price, tickEvent.Symbol, &ordersCheckedForTick, &stopLossExecutedForTick)
+			}
+		}
 
 		tickIDStr := strconv.FormatInt(tickEvent.Timestamp, 10) // or any unique identifier for the tick
 		metrics.OrdersChecked.WithLabelValues(w.workerID, tickIDStr).Set(float64(ordersCheckedForTick))
